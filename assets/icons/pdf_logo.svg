@@ -1,0 +1,16 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- PDF Document Background -->
+  <rect x="8" y="4" width="40" height="56" rx="2" fill="#FFFFFF" stroke="#0057FF" stroke-width="2"/>
+  
+  <!-- Folded Corner -->
+  <path d="M40 4 L48 12 L40 12 Z" fill="#0057FF"/>
+  
+  <!-- PDF Text -->
+  <text x="32" y="25" font-family="Arial, sans-serif" font-size="8" font-weight="bold" text-anchor="middle" fill="#0057FF">PDF</text>
+  
+  <!-- Document Lines -->
+  <line x1="14" y1="32" x2="42" y2="32" stroke="#E0E0E0" stroke-width="1"/>
+  <line x1="14" y1="38" x2="38" y2="38" stroke="#E0E0E0" stroke-width="1"/>
+  <line x1="14" y1="44" x2="42" y2="44" stroke="#E0E0E0" stroke-width="1"/>
+  <line x1="14" y1="50" x2="35" y2="50" stroke="#E0E0E0" stroke-width="1"/>
+</svg>
