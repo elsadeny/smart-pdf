@@ -3,14 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import '../models/pdf_tool.dart';
 import '../services/ad_service.dart';
-import '../services/pdf_processing_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/file_list_item.dart';
 import '../widgets/progress_overlay.dart';
 import 'pdf_viewer_screen.dart';
+import '../spdfcore_rust.dart';
+
+
 
 class ToolScreen extends StatefulWidget {
   final PDFTool tool;
@@ -31,6 +34,7 @@ class _ToolScreenState extends State<ToolScreen> {
   List<String>? _splitResultFiles;  // For storing multiple split output files
   int _splitPage = 1;  // For split PDF functionality
   final _splitPageController = TextEditingController();
+  final _spdfcoreRust = SpdfcoreRust();
 
   @override
   void dispose() {
@@ -581,79 +585,135 @@ class _ToolScreenState extends State<ToolScreen> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             Text(
               _resultMessage!,
               style: AppTheme.textTheme.bodyMedium?.copyWith(
                 color: Colors.green.shade700,
               ),
             ),
-            
-            if (_resultStats != null) ...[
+
+            // If this was a split operation and we have multiple output files,
+            // render a card for each output so the user can open/share individually.
+            if (widget.tool.type == ToolType.split && _splitResultFiles != null) ...[
               const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.shade200),
-                ),
-                child: Column(
-                  children: [
-                    for (final entry in _resultStats!.entries)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Column(
+                children: _splitResultFiles!.map((outPath) {
+                  final fileName = outPath.split('/').last;
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        side: BorderSide(color: Colors.green.shade100),
+                      ),
+                      child: ListTile(
+                        title: Text(
+                          fileName,
+                          style: AppTheme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: FutureBuilder<PdfInfo>(
+                          future: _spdfcoreRust.getPdfInfo(outPath),
+                          builder: (context, snap) {
+                            if (snap.connectionState == ConnectionState.waiting) {
+                              return const Text('Analyzing...');
+                            }
+                            if (snap.hasError || !snap.hasData) {
+                              return const Text('Unavailable');
+                            }
+                            final info = snap.data!;
+                            return Text('${info.pageCount} pages • ${SpdfcoreRust.formatFileSize(info.fileSize)}');
+                          },
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              entry.key,
-                              style: AppTheme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w500,
-                              ),
+                            IconButton(
+                              icon: const Icon(Icons.open_in_new_rounded),
+                              onPressed: () => _openFile(outPath),
                             ),
-                            Text(
-                              entry.value,
-                              style: AppTheme.textTheme.bodySmall?.copyWith(
-                                color: Colors.black54,
-                              ),
+                            IconButton(
+                              icon: const Icon(Icons.share_rounded),
+                              onPressed: () => _shareFile(outPath),
                             ),
                           ],
                         ),
+                        onTap: () => _openFile(outPath),
                       ),
-                  ],
-                ),
-              ),
-            ],
-            
-            const SizedBox(height: 16),
-            
-            // Action buttons
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _openResultFile,
-                    icon: const Icon(Icons.open_in_new_rounded),
-                    label: const Text('Open'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _shareResultFile,
-                    icon: const Icon(Icons.share_rounded),
-                    label: const Text('Share'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.tool.iconColor,
-                      foregroundColor: Colors.white,
                     ),
+                  );
+                }).toList(),
+              ),
+            ] else ...[
+              if (_resultStats != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.shade200),
+                  ),
+                  child: Column(
+                    children: [
+                      for (final entry in _resultStats!.entries)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                entry.key,
+                                style: AppTheme.textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                entry.value,
+                                style: AppTheme.textTheme.bodySmall?.copyWith(
+                                  color: Colors.black54,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ],
-            ),
+
+              const SizedBox(height: 16),
+
+              // Action buttons for single-file results
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _openResultFile,
+                      icon: const Icon(Icons.open_in_new_rounded),
+                      label: const Text('Open'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: _shareResultFile,
+                      icon: const Icon(Icons.share_rounded),
+                      label: const Text('Share'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: widget.tool.iconColor,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -843,8 +903,7 @@ class _ToolScreenState extends State<ToolScreen> {
     });
 
     try {
-      // Make sure PDF processing service is initialized
-      await PDFProcessingService.initialize();
+      // PDF processing service is ready to use with spdfcore_rust
       
       String? outputPath;
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -855,12 +914,11 @@ class _ToolScreenState extends State<ToolScreen> {
             _processingMessage = 'Validating PDFs...';
           });
           
-          // Validate all files first - use basic validation for now
+          // Validate all files first - use spdfcore_rust validation
           for (var file in _selectedFiles) {
             try {
-              final info = await PDFProcessingService.getPdfInfo(file.path);
-              // If native validation works, use it
-              if (info != null && !info.isValid) {
+              final isValid = await _spdfcoreRust.validatePdf(file.path);
+              if (!isValid) {
                 throw Exception('Cannot process PDF: ${file.path.split('/').last}. File validation failed.');
               }
             } catch (e) {
@@ -891,20 +949,29 @@ class _ToolScreenState extends State<ToolScreen> {
             _processingMessage = 'Merging ${_selectedFiles.length} PDFs...';
           });
           
-          outputPath = await PDFProcessingService.mergePDFs(
-            _selectedFiles,
-            'merged_pdf_$timestamp.pdf',
-          );
+          // Get documents directory for output
+          final directory = await getApplicationDocumentsDirectory();
+          final mergeOutputPath = '${directory.path}/merged_pdf_$timestamp.pdf';
+          
+          // Convert List<File> to List<String> (file paths)
+          final inputFilePaths = _selectedFiles.map((file) => file.path).toList();
+          
+          await _spdfcoreRust.mergeFiles(inputFilePaths, mergeOutputPath);
+          
+          // Set the result path
+          outputPath = mergeOutputPath;
           break;
           
         case ToolType.compress:
           setState(() {
             _processingMessage = 'Compressing PDF...';
           });
-          outputPath = await PDFProcessingService.compressPDF(
-            _selectedFiles.first,
-            'compressed_pdf_$timestamp.pdf',
-          );
+          
+          // Get documents directory for output
+          final directory = await getApplicationDocumentsDirectory();
+          final compressOutputPath = '${directory.path}/compressed_pdf_$timestamp.pdf';
+          
+          outputPath = await _spdfcoreRust.compressPdf(_selectedFiles.first.path, compressOutputPath);
           break;
           
         case ToolType.split:
@@ -913,9 +980,9 @@ class _ToolScreenState extends State<ToolScreen> {
           });
           
           final inputFile = _selectedFiles.first;
-          final pdfInfo = await PDFProcessingService.getPdfInfo(inputFile.path);
+          final pdfInfo = await _spdfcoreRust.getPdfInfo(inputFile.path);
           
-          if (pdfInfo != null && pdfInfo.pageCount > 1) {
+          if (pdfInfo.pageCount > 1) {
             // Validate split page
             if (_splitPage < 1 || _splitPage >= pdfInfo.pageCount) {
               throw Exception('Invalid split page. Must be between 1 and ${pdfInfo.pageCount - 1}');
@@ -925,11 +992,15 @@ class _ToolScreenState extends State<ToolScreen> {
               _processingMessage = 'Splitting PDF at page $_splitPage...';
             });
             
+            // Get documents directory for output
+            final directory = await getApplicationDocumentsDirectory();
+            final splitOutputPrefix = '${directory.path}/split_pdf_$timestamp';
+            
             // Use splitAtPage which creates two files
-            final outputFiles = await PDFProcessingService.splitAtPage(
+            final outputFiles = await _spdfcoreRust.splitAtPage(
               inputFile.path,
               _splitPage,
-              'split_pdf_$timestamp',
+              splitOutputPrefix,
             );
             
             // Store both files for split result
@@ -958,14 +1029,12 @@ class _ToolScreenState extends State<ToolScreen> {
           for (int i = 0; i < _splitResultFiles!.length; i++) {
             final file = _splitResultFiles![i];
             final fileName = file.split('/').last;
-            final pdfInfo = await PDFProcessingService.getPdfInfo(file);
+            final pdfInfo = await _spdfcoreRust.getPdfInfo(file);
             
-            if (pdfInfo != null) {
-              final partName = i == 0 ? 'Part 1 (1-$_splitPage)' : 'Part 2 (${_splitPage + 1}+)';
-              stats['$partName File'] = fileName;
-              stats['$partName Size'] = PDFProcessingService.formatFileSize(pdfInfo.fileSize);
-              stats['$partName Pages'] = '${pdfInfo.pageCount} pages';
-            }
+            final partName = i == 0 ? 'Part 1 (1-$_splitPage)' : 'Part 2 (${_splitPage + 1}+)';
+            stats['$partName File'] = fileName;
+            stats['$partName Size'] = SpdfcoreRust.formatFileSize(pdfInfo.fileSize);
+            stats['$partName Pages'] = '${pdfInfo.pageCount} pages';
           }
           
           setState(() {
@@ -975,19 +1044,13 @@ class _ToolScreenState extends State<ToolScreen> {
           });
         } else {
           // Regular single file result processing
-          final pdfInfo = await PDFProcessingService.getPdfInfo(outputPath);
-          Map<String, String> stats;
-          
-          if (pdfInfo != null) {
-            stats = {
-              'File Size': PDFProcessingService.formatFileSize(pdfInfo.fileSize),
-              'Page Count': '${pdfInfo.pageCount} pages',
-              'Valid PDF': pdfInfo.isValid ? 'Yes' : 'No',
-              'Output Path': outputPath.split('/').last,
-            };
-          } else {
-            stats = await PDFProcessingService.getFileStats(outputPath);
-          }
+          final pdfInfo = await _spdfcoreRust.getPdfInfo(outputPath);
+          Map<String, String> stats = {
+            'File Size': SpdfcoreRust.formatFileSize(pdfInfo.fileSize),
+            'Page Count': '${pdfInfo.pageCount} pages',
+            'Valid PDF': pdfInfo.isValid ? 'Yes' : 'No',
+            'Output Path': outputPath.split('/').last,
+          };
           
           setState(() {
             _resultMessage = '${widget.tool.title} completed successfully!';
@@ -1094,12 +1157,33 @@ class _ToolScreenState extends State<ToolScreen> {
     }
   }
 
+  void _openFile(String path) {
+    final fileName = path.split('/').last;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => PDFViewerScreen(
+          filePath: path,
+          fileName: fileName,
+        ),
+      ),
+    );
+  }
+
+  void _shareFile(String path) {
+    final fileName = path.split('/').last;
+    Share.shareXFiles(
+      [XFile(path)],
+      text: 'Check out this PDF created with SmartPDF: $fileName',
+      subject: 'SmartPDF - $fileName',
+    );
+  }
+
   Future<int?> _getSelectedFilePagesCount() async {
     if (_selectedFiles.isEmpty) return null;
     
     try {
-      final pdfInfo = await PDFProcessingService.getPdfInfo(_selectedFiles.first.path);
-      return pdfInfo?.pageCount;
+      final pdfInfo = await _spdfcoreRust.getPdfInfo(_selectedFiles.first.path);
+      return pdfInfo.pageCount;
     } catch (e) {
       print('Error getting page count: $e');
       return null;

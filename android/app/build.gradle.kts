@@ -29,30 +29,22 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         
-        // Add native build configuration
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
-        }
         
-        externalNativeBuild {
-            cmake {
-                cppFlags += ""
-            }
-        }
+        
     }
     
-    externalNativeBuild {
-        cmake {
-            path = file("src/main/cpp/CMakeLists.txt")
-            version = "3.22.1"
-        }
-    }
 
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    packagingOptions {
+        jniLibs {
+            pickFirsts.add("**/libspdfcore.so")
         }
     }
 }

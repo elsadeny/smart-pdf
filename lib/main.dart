@@ -4,16 +4,15 @@ import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'theme/app_theme.dart';
 import 'services/ad_service.dart';
-import 'services/pdf_processing_service.dart';
+import 'bridge_generated.dart/frb_generated.dart'; // import your generated ffi.dart
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await RustLib.init();
   
   // Initialize Google Mobile Ads
   await MobileAds.instance.initialize();
-  
-  // Initialize PDF processing service
-  await PDFProcessingService.initialize();
   
   runApp(const SmartPDFApp());
 }

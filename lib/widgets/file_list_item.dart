@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
 import '../theme/app_theme.dart';
-import '../services/pdf_processing_service.dart';
-import '../spdfcore.dart';
+import '../spdfcore_rust.dart';
 
 class FileListItem extends StatelessWidget {
   final File file;
@@ -21,6 +20,8 @@ class FileListItem extends StatelessWidget {
     this.onMoveUp,
     this.onMoveDown,
   });
+
+  static final _spdfcoreRust = SpdfcoreRust();
 
   @override
   Widget build(BuildContext context) {
@@ -76,10 +77,10 @@ class FileListItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                // Show PDF information using spdfcore
+                // Show PDF information using spdfcore_rust
                 FutureBuilder<PdfInfo?>(
                   future: fileName.toLowerCase().endsWith('.pdf') 
-                      ? PDFProcessingService.getPdfInfo(file.path)
+                      ? _spdfcoreRust.getPdfInfo(file.path)
                       : null,
                   builder: (context, snapshot) {
                     if (snapshot.hasData && snapshot.data != null) {
@@ -88,7 +89,7 @@ class FileListItem extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${pdfInfo.pageCount} pages • ${PDFProcessingService.formatFileSize(pdfInfo.fileSize)}',
+                            '${pdfInfo.pageCount} pages • ${SpdfcoreRust.formatFileSize(pdfInfo.fileSize)}',
                             style: AppTheme.textTheme.bodySmall?.copyWith(
                               color: Colors.black54,
                             ),

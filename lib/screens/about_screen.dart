@@ -4,9 +4,42 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../services/ad_service.dart';
 import '../theme/app_theme.dart';
+import '../spdfcore_rust.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
+  
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
+  String _coreVersion = 'Loading...';
+  final SpdfcoreRust _spdfcoreRust = SpdfcoreRust();
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+  
+  Future<void> _loadVersion() async {
+    try {
+      final version = await _spdfcoreRust.getVersion();
+      if (mounted) {
+        setState(() {
+          _coreVersion = version;
+        });
+      }
+    } catch (e) {
+      print('Error loading spdfcore version: $e');
+      if (mounted) {
+        setState(() {
+          _coreVersion = 'Error loading version';
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -303,11 +336,11 @@ class AboutScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Version',
+                  'Core Version',
                   style: AppTheme.textTheme.titleMedium,
                 ),
                 Text(
-                  '1.0.0',
+                  _coreVersion,
                   style: AppTheme.textTheme.bodyMedium?.copyWith(
                     color: Colors.black54,
                   ),

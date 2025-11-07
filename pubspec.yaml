@@ -42,6 +42,7 @@ dependencies:
   
   # SVG support
   flutter_svg: ^2.0.10
+  flutter_rust_bridge: 2.11.1
 
 dev_dependencies:
   flutter_test:

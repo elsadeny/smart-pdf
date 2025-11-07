@@ -1,0 +1,3 @@
+[submodule "spdfcore"]
+	path = spdfcore
+	url = git@github.com:elsadeny/spdfcore.git
