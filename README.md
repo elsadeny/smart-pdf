@@ -5,11 +5,25 @@
 ## 🎯 Features
 
 - **Merge PDF** - Combine multiple PDF files into one document
-- **Split PDF** - Extract specific pages from PDF documents
+- **Split PDF** - Extract specific pages from PDF documents with individual file access
 - **Compress PDF** - Reduce file size without losing quality
 - **Lock/Unlock PDF** - Add or remove password protection (Rewarded Ad)
 - **Image to PDF** - Convert images to PDF format (Rewarded Ad)
 - **More Tools** - Coming soon placeholder
+
+## 🏗️ Architecture
+
+This project uses a **Git submodule architecture** for better code organization:
+
+- **Main Repository**: `smart-pdf` - Contains the Flutter app and UI
+- **Submodule**: `spdfcore` - Contains the Rust PDF processing engine using lopdf
+
+### Submodule Setup
+
+The `spdfcore` directory is a Git submodule pointing to:
+- Repository: `git@github.com:elsadeny/spdfcore.git`
+- Latest commit: Uses `core.rs` functions for reliable PDF operations
+- FFI Bridge: Flutter Rust Bridge for seamless Dart-Rust integration
 
 ## 🎨 Design
 
@@ -254,7 +268,57 @@ The app requires these permissions (already configured):
 - **Memory management** for large files
 - **Background processing** for file operations
 
-## 🚀 Future Enhancements
+## � Development Setup
+
+### Prerequisites
+- Flutter SDK (>=3.0.0)
+- Rust toolchain
+- Android SDK for building
+
+### Clone with Submodules
+```bash
+git clone --recursive git@github.com:elsadeny/smart-pdf.git
+cd smart-pdf
+```
+
+### If Already Cloned (Initialize Submodules)
+```bash
+git submodule init
+git submodule update
+```
+
+### Build Rust FFI
+```bash
+./build.sh
+```
+
+### Run the App
+```bash
+flutter pub get
+flutter run
+```
+
+### Working with Submodules
+
+**Update Submodule to Latest:**
+```bash
+cd spdfcore
+git pull origin main
+cd ..
+git add spdfcore
+git commit -m "Update spdfcore submodule"
+```
+
+**Switch Submodule Branch:**
+```bash
+cd spdfcore
+git checkout <branch-name>
+cd ..
+git add spdfcore
+git commit -m "Switch spdfcore to <branch-name>"
+```
+
+## �🚀 Future Enhancements
 
 - **More PDF tools** (OCR, watermark, etc.)
 - **Cloud integration** (Google Drive, Dropbox)
