@@ -1012,6 +1012,28 @@ class _ToolScreenState extends State<ToolScreen> {
           }
           break;
           
+        case ToolType.imageToPdf:
+          setState(() {
+            _processingMessage = 'Converting ${_selectedFiles.length} image(s) to PDF...';
+          });
+          
+          // Get documents directory for output
+          final directory = await getApplicationDocumentsDirectory();
+          final imageToPdfOutputPath = '${directory.path}/images_to_pdf_$timestamp.pdf';
+          
+          // Convert List<File> to List<String> (file paths)
+          final inputImagePaths = _selectedFiles.map((file) => file.path).toList();
+          
+          if (inputImagePaths.length == 1) {
+            await SpdfcoreRust.imageToPdf(inputImagePaths.first, imageToPdfOutputPath);
+          } else {
+            await SpdfcoreRust.imagesToPdf(inputImagePaths, imageToPdfOutputPath);
+          }
+          
+          // Set the result path
+          outputPath = imageToPdfOutputPath;
+          break;
+          
         default:
           // For other tools, create a demo output
           setState(() {

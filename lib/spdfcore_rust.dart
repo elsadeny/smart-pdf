@@ -67,6 +67,48 @@ class SpdfcoreRust {
     return outputFile;
   }
 
+  /// Check if a PDF file is password protected
+  static Future<bool> isPdfPasswordProtected(String filePath) async {
+    try {
+      return await bridge.isPdfPasswordProtected(filePath: filePath);
+    } catch (e) {
+      print('Error checking password protection: $e');
+      rethrow;
+    }
+  }
+
+  /// Convert a single image to PDF
+  static Future<void> imageToPdf(String imagePath, String outputPath) async {
+    try {
+      await bridge.imageToPdf(imagePath: imagePath, outputPath: outputPath);
+      print('Image converted to PDF: $outputPath');
+    } catch (e) {
+      print('Error converting image to PDF: $e');
+      rethrow;
+    }
+  }
+
+  /// Convert multiple images to a single PDF
+  static Future<void> imagesToPdf(List<String> imagePaths, String outputPath) async {
+    try {
+      await bridge.imagesToPdf(imagePaths: imagePaths, outputPath: outputPath);
+      print('Images converted to PDF: $outputPath');
+    } catch (e) {
+      print('Error converting images to PDF: $e');
+      rethrow;
+    }
+  }
+
+  /// Unlock a password-protected PDF
+  Future<void> unlockPdf(String inputFile, String password, String outputFile) async {
+    await bridge.unlockPdf(inputFile: inputFile, password: password, outputFile: outputFile);
+  }
+
+  /// Lock PDF with password protection
+  Future<void> lockPdf(String inputFile, String password, String outputFile) async {
+    await bridge.lockPdf(inputFile: inputFile, password: password, outputFile: outputFile);
+  }
+
   /// Get library version
   Future<String> getVersion() async {
     return await bridge.spdfcoreVersion();

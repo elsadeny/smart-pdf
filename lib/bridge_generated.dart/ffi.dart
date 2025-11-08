@@ -43,3 +43,30 @@ Future<void> splitAtPage(
         required String outputPrefix}) =>
     RustLib.instance.api.crateFfiSplitAtPage(
         inputFile: inputFile, splitPage: splitPage, outputPrefix: outputPrefix);
+
+Future<bool> isPdfPasswordProtected({required String filePath}) =>
+    RustLib.instance.api.crateFfiIsPdfPasswordProtected(filePath: filePath);
+
+Future<void> imageToPdf(
+        {required String imagePath, required String outputPath}) =>
+    RustLib.instance.api
+        .crateFfiImageToPdf(imagePath: imagePath, outputPath: outputPath);
+
+Future<void> imagesToPdf(
+        {required List<String> imagePaths, required String outputPath}) =>
+    RustLib.instance.api
+        .crateFfiImagesToPdf(imagePaths: imagePaths, outputPath: outputPath);
+
+Future<void> unlockPdf(
+        {required String inputFile,
+        required String password,
+        required String outputFile}) =>
+    RustLib.instance.api.crateFfiUnlockPdf(
+        inputFile: inputFile, password: password, outputFile: outputFile);
+
+Future<void> lockPdf(
+        {required String inputFile,
+        required String password,
+        required String outputFile}) =>
+    RustLib.instance.api.crateFfiLockPdf(
+        inputFile: inputFile, password: password, outputFile: outputFile);

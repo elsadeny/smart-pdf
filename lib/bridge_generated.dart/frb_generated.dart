@@ -68,7 +68,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.11.1';
 
   @override
-  int get rustContentHash => -1618449198;
+  int get rustContentHash => -246586585;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -88,6 +88,19 @@ abstract class RustLibApi extends BaseApi {
 
   Future<int> crateFfiGetPageCount({required String filePath});
 
+  Future<void> crateFfiImageToPdf(
+      {required String imagePath, required String outputPath});
+
+  Future<void> crateFfiImagesToPdf(
+      {required List<String> imagePaths, required String outputPath});
+
+  Future<bool> crateFfiIsPdfPasswordProtected({required String filePath});
+
+  Future<void> crateFfiLockPdf(
+      {required String inputFile,
+      required String password,
+      required String outputFile});
+
   Future<void> crateFfiMergeFiles(
       {required List<String> inputFiles, required String outputFile});
 
@@ -101,6 +114,11 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateFfiSplitByPages(
       {required String inputFile,
       required List<int> pages,
+      required String outputFile});
+
+  Future<void> crateFfiUnlockPdf(
+      {required String inputFile,
+      required String password,
       required String outputFile});
 
   Future<bool> crateFfiValidatePdf({required String filePath});
@@ -192,6 +210,112 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateFfiImageToPdf(
+      {required String imagePath, required String outputPath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(imagePath, serializer);
+        sse_encode_String(outputPath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 4, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateFfiImageToPdfConstMeta,
+      argValues: [imagePath, outputPath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateFfiImageToPdfConstMeta => const TaskConstMeta(
+        debugName: "image_to_pdf",
+        argNames: ["imagePath", "outputPath"],
+      );
+
+  @override
+  Future<void> crateFfiImagesToPdf(
+      {required List<String> imagePaths, required String outputPath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_list_String(imagePaths, serializer);
+        sse_encode_String(outputPath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 5, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateFfiImagesToPdfConstMeta,
+      argValues: [imagePaths, outputPath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateFfiImagesToPdfConstMeta => const TaskConstMeta(
+        debugName: "images_to_pdf",
+        argNames: ["imagePaths", "outputPath"],
+      );
+
+  @override
+  Future<bool> crateFfiIsPdfPasswordProtected({required String filePath}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(filePath, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 6, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_bool,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateFfiIsPdfPasswordProtectedConstMeta,
+      argValues: [filePath],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateFfiIsPdfPasswordProtectedConstMeta =>
+      const TaskConstMeta(
+        debugName: "is_pdf_password_protected",
+        argNames: ["filePath"],
+      );
+
+  @override
+  Future<void> crateFfiLockPdf(
+      {required String inputFile,
+      required String password,
+      required String outputFile}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(inputFile, serializer);
+        sse_encode_String(password, serializer);
+        sse_encode_String(outputFile, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 7, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateFfiLockPdfConstMeta,
+      argValues: [inputFile, password, outputFile],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateFfiLockPdfConstMeta => const TaskConstMeta(
+        debugName: "lock_pdf",
+        argNames: ["inputFile", "password", "outputFile"],
+      );
+
+  @override
   Future<void> crateFfiMergeFiles(
       {required List<String> inputFiles, required String outputFile}) {
     return handler.executeNormal(NormalTask(
@@ -200,7 +324,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_list_String(inputFiles, serializer);
         sse_encode_String(outputFile, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 4, port: port_);
+            funcId: 8, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -223,7 +347,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 5, port: port_);
+            funcId: 9, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_String,
@@ -252,7 +376,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_i_32(splitPage, serializer);
         sse_encode_String(outputPrefix, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 6, port: port_);
+            funcId: 10, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -281,7 +405,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
         sse_encode_list_prim_i_32_loose(pages, serializer);
         sse_encode_String(outputFile, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 7, port: port_);
+            funcId: 11, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_unit,
@@ -299,13 +423,42 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<void> crateFfiUnlockPdf(
+      {required String inputFile,
+      required String password,
+      required String outputFile}) {
+    return handler.executeNormal(NormalTask(
+      callFfi: (port_) {
+        final serializer = SseSerializer(generalizedFrbRustBinding);
+        sse_encode_String(inputFile, serializer);
+        sse_encode_String(password, serializer);
+        sse_encode_String(outputFile, serializer);
+        pdeCallFfi(generalizedFrbRustBinding, serializer,
+            funcId: 12, port: port_);
+      },
+      codec: SseCodec(
+        decodeSuccessData: sse_decode_unit,
+        decodeErrorData: sse_decode_String,
+      ),
+      constMeta: kCrateFfiUnlockPdfConstMeta,
+      argValues: [inputFile, password, outputFile],
+      apiImpl: this,
+    ));
+  }
+
+  TaskConstMeta get kCrateFfiUnlockPdfConstMeta => const TaskConstMeta(
+        debugName: "unlock_pdf",
+        argNames: ["inputFile", "password", "outputFile"],
+      );
+
+  @override
   Future<bool> crateFfiValidatePdf({required String filePath}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
         final serializer = SseSerializer(generalizedFrbRustBinding);
         sse_encode_String(filePath, serializer);
         pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 8, port: port_);
+            funcId: 13, port: port_);
       },
       codec: SseCodec(
         decodeSuccessData: sse_decode_bool,
