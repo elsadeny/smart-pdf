@@ -107,6 +107,25 @@ Podfile.lock
 *.dylib
 *.dll
 
+# iOS Frameworks (built by scripts)
+/ios/Runner/Frameworks/
+/ios/Pods/
+/ios/Podfile.lock
+
+# Generated Plugin Registrants
+**/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/generated_plugins.*
+
+# Build helper scripts (temporary)
+/ios/add_copy_script.rb
+/ios/add_dylib_script.rb  
+/ios/embed_framework.rb
+
+# Backup files
+*.backup
+pubspec.yaml.backup
+
 # Test related
 /test_coverage/
 /.nyc_output/

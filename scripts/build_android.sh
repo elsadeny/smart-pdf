@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Generating flutter_rust_bridge bindings..."
+echo "Generating flutter_rust_bridge bindings for Android..."
+
+# Generate FFI bindings
 flutter_rust_bridge_codegen generate \
   --rust-root spdfcore \
   --rust-input crate::ffi \
@@ -11,6 +13,7 @@ flutter_rust_bridge_codegen generate \
 echo "Building Rust library for Android..."
 cd spdfcore
 
+# Build for Android targets
 cargo ndk \
     -t arm64-v8a \
     -t armeabi-v7a \
@@ -19,4 +22,7 @@ cargo ndk \
     build --release
 
 cd ..
-echo "Done!"
+echo "Done! Android libraries created:"
+echo "  - arm64-v8a: android/app/src/main/jniLibs/arm64-v8a/libspdfcore.so"
+echo "  - armeabi-v7a: android/app/src/main/jniLibs/armeabi-v7a/libspdfcore.so"
+echo "  - x86_64: android/app/src/main/jniLibs/x86_64/libspdfcore.so"
